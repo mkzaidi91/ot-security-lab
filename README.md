@@ -64,3 +64,21 @@ documentation in [`docs/`](docs/).
 ## Credits
 Built on [GRFICSv3](https://github.com/Fortiphyd/GRFICSv3) by
 Fortiphyd Logic. Simulation and container images are their work.
+
+## SIEM integration (Wazuh)
+Suricata alerts are shipped by a Wazuh agent on the OT lab VM to a
+central Wazuh manager, where they are decoded and surfaced as SIEM
+alerts — the same way a real OT SOC centralizes detections.
+
+**Both OT attack alerts in the Wazuh dashboard (agent: ot-lab, rule 86601):**
+
+![Wazuh dashboard](screenshots/wazuh_dashboard.jpg)
+
+**Alert detail — unauthorized Modbus write, with source IP and MITRE mapping:**
+
+![Wazuh alert detail 1](screenshots/wazuh_detection1_details.jpg)
+
+![Wazuh alert detail 2](screenshots/wazuh_detection2_details.jpg)
+
+Full pipeline: Kali (DMZ) → PLC → Suricata (ICS sensor) → Wazuh agent →
+Wazuh SIEM, tagged with MITRE ATT&CK for ICS T0836 and T0855.
