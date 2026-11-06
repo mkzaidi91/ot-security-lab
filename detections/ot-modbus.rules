@@ -6,3 +6,14 @@ alert tcp any any -> 192.168.95.2 502 (msg:"OT UNAUTHORIZED Modbus Write Multipl
 
 # Any Modbus write sourced from the DMZ network specifically (high confidence)
 alert tcp 192.168.90.0/24 any -> 192.168.95.2 502 (msg:"OT CRITICAL Modbus write from DMZ to PLC - possible attack"; flow:to_server,established; content:"|06|"; offset:7; depth:1; sid:1000003; rev:1; metadata:mitre_tactic ICS-T0855 mitre_technique Unauthorized_Command_Message;)
+
+# BEHAVIORAL: any host other than the HMI or engineering workstation talking Modbus to the PLC
+# Catches reconnaissance and new/unauthorized devices, not just writes (allowlist / anomaly approach)
+
+# BEHAVIORAL: a Modbus write from any host that is NOT the engineering workstation (only the EWS should write)
+
+# BEHAVIORAL: any host other than the HMI or engineering workstation talking Modbus to the PLC
+
+# BEHAVIORAL: a Modbus write from any host that is NOT the engineering workstation
+alert tcp ![192.168.95.5,192.168.90.107] any -> 192.168.95.2 502 (msg:"OT ANOMALY Modbus to PLC from unrecognized host"; flow:to_server,established; sid:1000010; rev:1; metadata:mitre_tactic ICS-T0846 mitre_technique Remote_System_Discovery;)
+alert tcp !192.168.95.5 any -> 192.168.95.2 502 (msg:"OT ANOMALY Modbus write to PLC from non-engineering host"; flow:to_server,established; content:"|06|"; offset:7; depth:1; sid:1000011; rev:1; metadata:mitre_tactic ICS-T0836 mitre_technique Modify_Parameter;)

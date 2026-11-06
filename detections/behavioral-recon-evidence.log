@@ -1,0 +1,4 @@
+11/06/2026-19:01:15.342698  [**] [1:1000010:1] OT ANOMALY Modbus to PLC from unrecognized host [**] [Classification: (null)] [Priority: 3] {TCP} 192.168.90.6:33014 -> 192.168.95.2:502
+11/06/2026-19:01:15.342978  [**] [1:1000010:1] OT ANOMALY Modbus to PLC from unrecognized host [**] [Classification: (null)] [Priority: 3] {TCP} 192.168.90.6:33014 -> 192.168.95.2:502
+11/06/2026-19:01:15.343635  [**] [1:1000010:1] OT ANOMALY Modbus to PLC from unrecognized host [**] [Classification: (null)] [Priority: 3] {TCP} 192.168.90.6:33014 -> 192.168.95.2:502
+11/06/2026-19:02:22.787602  [**] [1:1000010:1] OT ANOMALY Modbus to PLC from unrecognized host [**] [Classification: (null)] [Priority: 3] {TCP} 192.168.90.6:33014 -> 192.168.95.2:502
