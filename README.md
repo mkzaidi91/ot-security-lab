@@ -78,3 +78,14 @@ Full pipeline: Kali (DMZ) -> PLC -> Suricata (ICS sensor) -> Wazuh agent
 ## Credits
 Built on [GRFICSv3](https://github.com/Fortiphyd/GRFICSv3) by Fortiphyd
 Logic. Simulation and container images are their work.
+
+## Behavioral detection (catching reconnaissance)
+The Suricata signature rules above catch a Modbus *write* by its function code.
+To catch a subtler attacker, I added a behavioral rule: on this plant only the
+HMI and the engineering workstation should ever initiate Modbus to the PLC, so
+anything else touching it — even a read — is flagged as an anomaly.
+
+Tested with a **read-only** recon from the DMZ attacker: the behavioral rule
+(sid 1000010) fired, while the write-signature rules stayed silent — proving the
+behavioral layer catches reconnaissance the signatures miss. See
+[`docs/06-behavioral-detection.md`](docs/06-behavioral-detection.md).
