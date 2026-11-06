@@ -89,3 +89,31 @@ Tested with a **read-only** recon from the DMZ attacker: the behavioral rule
 (sid 1000010) fired, while the write-signature rules stayed silent — proving the
 behavioral layer catches reconnaissance the signatures miss. See
 [`docs/06-behavioral-detection.md`](docs/06-behavioral-detection.md).
+
+## Notes & gotchas (things I hit building this)
+A few real problems I worked through, kept here because they're the useful part:
+
+- **GRFICS networking wouldn't come up on the VM.** The compose file defines
+  macvlan networks with a parent of `eth0`, but on my Ubuntu VM under Proxmox
+  the NIC is `ens18`, so the networks failed to create until I pointed the
+  macvlan parent at the right interface.
+- **Reading the Modbus function code in Suricata.** The function code is the
+  8th byte of the Modbus/TCP payload, so the rules match on `content:"|06|";
+  offset:7; depth:1` (06 = write single register, 10 = write multiple). Getting
+  the offset right was the difference between the rule firing and silently not.
+- **Duplicate-rule parse failure.** When I was iterating I appended the same
+  behavioral rules twice; Suricata loaded the first copy and threw a "duplicate
+  signature" error on the second. Deduping the rules file fixed it.
+- **Wazuh agent version mismatch.** The manager runs in the single-node Docker
+  compose at v4.14.7, so the agent had to match — a mismatched agent version
+  wouldn't report cleanly.
+- **Reaching the Wazuh dashboard remotely.** The dashboard sits behind a
+  subnet-routed address and I couldn't hit it over Tailscale at first; I ended
+  up running Tailscale directly on the Wazuh host to get a clean path to it.
+
+## Why behavioral on top of signatures
+The signature rule only sees a write. When I ran a read-only recon from the
+attacker box, the write rules stayed silent but the behavioral rule caught it,
+which is exactly the gap behavioral detection is for. That's the lesson I'd
+carry into a real environment: signatures for known-bad, behavioral baselines
+for everything else.
