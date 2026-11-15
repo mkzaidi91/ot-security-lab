@@ -117,3 +117,17 @@ attacker box, the write rules stayed silent but the behavioral rule caught it,
 which is exactly the gap behavioral detection is for. That's the lesson I'd
 carry into a real environment: signatures for known-bad, behavioral baselines
 for everything else.
+
+## Deployment (ESXi + self-hosted Wazuh)
+
+The lab runs on VMware ESXi (migrated from Proxmox), with Suricata detections
+forwarded to a self-hosted Wazuh SIEM and the full pipeline made persistent with
+systemd. See [docs/07-esxi-deployment.md](docs/07-esxi-deployment.md).
+
+Highlights:
+- macvlan requires the ESXi port group to allow promiscuous mode / MAC changes / forged transmits
+- Suricata monitors cross-zone traffic inside the router container's network namespace (nsenter)
+- Suricata alerts ship to Wazuh via the agent; all four OT rules confirmed firing end-to-end
+
+![Suricata OT rules firing](screenshots/suricata-four-rules.png)
+![Wazuh OT Modbus alert](screenshots/wazuh-ot-modbus-alert.png)

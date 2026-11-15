@@ -1,0 +1,13 @@
+[Unit]
+Description=GRFICS OT lab (docker compose)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/iso/ot-security-lab
+ExecStart=/usr/bin/docker compose up -d
+
+[Install]
+WantedBy=multi-user.target
