@@ -298,7 +298,7 @@ networks:
   b-ics-net:
     driver: macvlan
     driver_opts:
-      parent: ens18.95  # Replace "eth0" with your actual host NIC, keep ".95"
+      parent: ens34.95  # Replace "eth0" with your actual host NIC, keep ".95"
     ipam:
       config:
         - subnet: 192.168.95.0/24
@@ -307,7 +307,7 @@ networks:
   c-dmz-net:
     driver: macvlan
     driver_opts:
-      parent: ens18.90  # Replace "eth0" with your actual host NIC, keep ".90"
+      parent: ens34.90  # Replace "eth0" with your actual host NIC, keep ".90"
     ipam:
       config:
         - subnet: 192.168.90.0/24
