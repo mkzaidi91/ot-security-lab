@@ -1,0 +1,19 @@
+<!--
+  OT SOAR trigger rule (add to the Wazuh MANAGER: /var/ossec/etc/rules/local_rules.xml)
+
+  Elevates the Suricata behavioral Modbus-write detections (sid 1000010 / 1000011)
+  to high severity and triggers the ot-soar-playbook active response.
+
+  Notes that cost me time, kept here so they don't cost yours:
+    - Suricata's signature_id decodes in Wazuh as alert.signature_id, NOT
+      data.alert.signature_id. Confirm field names with the Ruleset Test tool.
+    - Wazuh field matching defaults to OS_Regex, which does not support [..]
+      character classes. Use type="pcre2" for real regex.
+-->
+<group name="ot,suricata,soar,">
+  <rule id="100200" level="12">
+    <if_sid>86601</if_sid>
+    <field name="alert.signature_id" type="pcre2">^100001[01]$</field>
+    <description>OT: Unauthorized Modbus write to PLC (Suricata behavioral) - SOAR trigger</description>
+  </rule>
+</group>
