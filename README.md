@@ -7,6 +7,8 @@ plant, carries out a Modbus attack against the PLC, detects it with a
 Suricata rule mapped to MITRE ATT&CK for ICS, and centralizes the
 alert in a Wazuh SIEM.
 
+![OT Security Lab architecture and data flow](screenshots/OT_Lab_Architecture.png)
+
 ## What this demonstrates
 - Mapping an OT network across ICS and DMZ zones (Purdue model)
 - Baselining normal Modbus/TCP traffic
