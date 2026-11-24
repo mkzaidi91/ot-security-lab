@@ -14,6 +14,7 @@ alert in a Wazuh SIEM.
 - Observing physical process impact in the operator HMI
 - Writing a network detection and confirming it fires on the attack
 - Forwarding the detection into a SIEM, as a real OT SOC would
+- Automating triage and incident-case creation without letting the response touch the live process (OT-safe SOAR)
 
 ## Lab environment
 - Host: Proxmox VE, Ubuntu 24.04 VM (4 vCPU, 12 GB RAM)
@@ -131,3 +132,33 @@ Highlights:
 
 ![Suricata OT rules firing](screenshots/suricata-four-rules.png)
 ![Wazuh OT Modbus alert](screenshots/wazuh-ot-modbus-alert.png)
+
+## Automated response (SOAR)
+
+Detection is only half of a SOC, so the next step was an automated response to
+the Modbus-write detection, built to be safe for OT. When the behavioral rule
+catches an unauthorized write, Wazuh promotes it to a high-severity alert and
+runs a Python playbook that triages the event, opens an incident case, and stages
+containment for a human to approve.
+
+The pipeline:
+
+```
+Kali (DMZ) -> PLC -> Suricata -> Wazuh rule 100200 (level 12)
+  -> active response -> ot_soar_response.py -> incident case
+```
+
+The playbook classifies the source against an asset allowlist, the HMI and the
+engineering workstation are the only legitimate Modbus writers, and sets severity
+from that: CRITICAL for an unknown source, HIGH for a known host acting out of
+profile. It maps the event to MITRE ATT&CK for ICS T0836 and writes a JSON case
+with the evidence and a recommended action.
+
+It never touches the PLC, the control network, or the running process. Any
+disruptive containment is recommended at the IT/DMZ boundary (Purdue Level 3.5)
+and marked pending analyst approval. In OT, availability and safety come before
+confidentiality, so an automated response that can trip a live process is worse
+than the attack. The automation stops at that line on purpose.
+
+Full writeup, the playbook, the Wazuh rule, and deployment steps are in
+[`soar/`](soar/).
