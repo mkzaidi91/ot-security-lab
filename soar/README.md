@@ -1,18 +1,20 @@
 # OT SOAR: automated, OT-safe response to unauthorized PLC writes
 
-An end-to-end detection and response pipeline built on the lab. A behavioral
-Suricata rule catches an unauthorized Modbus write to a PLC, Wazuh promotes it to
-a high-severity alert, and a Python SOAR playbook triages it, opens an incident
-case, and stages containment for a human to approve. The automation is built so
-it can never disrupt the running process.
+This is the response half of the lab. The detection side catches an unauthorized
+Modbus write to the PLC. This part is what happens next. A Wazuh rule promotes
+that alert to high severity and runs a Python playbook I wrote. The playbook
+triages the alert, opens an incident case, and recommends containment, but it
+leaves anything that could touch the process to a human. That constraint drove
+the whole design.
 
-## The problem this solves
+## Why it works this way
 
-In OT, availability and safety come before confidentiality. You cannot let an
-automated response take an action that might trip a live process. That rules out
-the usual IT reflex of auto-blocking or auto-isolating. The goal here was to
-automate the slow parts of incident response, detection, triage, enrichment, and
-evidence, while leaving every process-affecting decision to a human.
+In OT, availability and safety come before confidentiality. A wrong automated
+action, like blocking a host that turns out to be legitimate or isolating a
+segment mid-operation, can do more damage than the attack. So I did not want the
+automation making those calls. I wanted it to do the slow, safe work for me
+(enrich the alert, classify the source, open a case, page on-call) and hand a
+person a clear recommendation to approve or reject.
 
 ## Architecture
 
@@ -49,16 +51,19 @@ real utilities use:
         - stages containment for ANALYST APPROVAL, never auto-acting on OT
 ```
 
-## The design decision that matters
+## What the playbook will and won't do
 
-The playbook does only safe things on its own: open a case, enrich it, notify,
-log. It never blocks, never drops traffic inside the control network, and never
-touches the PLC. When containment is warranted, it writes a recommendation to
-block the source at the IT/DMZ boundary (Purdue Level 3.5) and marks the case
-`OPEN_PENDING_ANALYST_APPROVAL`. A person decides.
+On its own the playbook only does safe things: open a case, enrich it, send a
+notification, write a log. It never blocks traffic, never touches the control
+network, and never talks to the PLC. When it thinks the source should be
+contained, it writes that as a recommendation (block at the IT/DMZ boundary,
+Purdue Level 3.5) and marks the case `OPEN_PENDING_ANALYST_APPROVAL`. Someone has
+to approve it before anything happens.
 
-That is the whole point. An automated response that can halt a running plant is
-worse than the attack it is responding to.
+I built it that way on purpose. On the IT side you might auto-isolate a
+compromised host and move on. On a plant floor that same reflex can trip a
+running process, so the automation stops at the boundary and a human makes the
+call.
 
 ## What it produces
 
@@ -112,14 +117,23 @@ simple and defensible:
 
 ## Notes from building it
 
-A few things that are easy to get wrong and worth writing down:
+The detection-to-case chain looked simple on paper and then did not fire, and
+chasing down why was most of the work. Keeping the notes here because they are
+the useful part.
 
-- Suricata's `signature_id` decodes in Wazuh as `alert.signature_id`, not
-  `data.alert.signature_id`. The Ruleset Test tool shows the real decoded field
-  names.
-- Wazuh field matching defaults to OS_Regex, which does not support `[..]`
-  character classes. Matching `^100001[01]$` needs `type="pcre2"`.
-- Wazuh ships the Enterprise ATT&CK database, so ICS technique IDs like T0836 are
-  not in it. The ICS mapping belongs in the playbook's case output, not the
-  Wazuh rule.
-- Rule and config changes only take effect after a manager restart.
+- **My Wazuh rule matched nothing at first.** The rule chains off the built-in
+  Suricata alert (86601) and matches on the signature ID, but it kept stopping at
+  86601 and never elevated. I ran a real alert through the Ruleset Test tool and
+  the decoded fields showed the ID as `alert.signature_id`, not the
+  `data.alert.signature_id` I had written. One wrong prefix, silent failure.
+- **Then it still would not match.** Wazuh's default field matching is its own
+  regex flavor (OS_Regex), which does not understand `[..]` character classes, so
+  `^100001[01]$` was being read literally. Adding `type="pcre2"` to the field
+  fixed it.
+- **The MITRE tag threw a warning.** Wazuh ships the Enterprise ATT&CK database,
+  and T0836 is an ATT&CK for ICS technique, so it is not in there. I dropped the
+  MITRE block from the rule and kept the ICS mapping where it belongs, in the
+  playbook's case output.
+- **Nothing takes effect until you restart the manager.** I lost time testing
+  edits that were saved but not loaded. Rule and config changes need a manager
+  restart first.
