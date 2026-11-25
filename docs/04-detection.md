@@ -1,7 +1,7 @@
 # Detection: Unauthorized Modbus Write
 
 ## Approach
-Network-based detection with Suricata 7 monitoring the ICS network (ens18.95).
+Network-based detection with Suricata 7 monitoring the ICS network (ens34.95).
 Rules alert on Modbus write function codes (6 = Write Single Register,
 16 = Write Multiple Registers) directed at the PLC (192.168.95.2), and
 specifically flag writes sourced from the DMZ (192.168.90.0/24).

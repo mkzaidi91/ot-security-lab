@@ -2,7 +2,7 @@
 
 Hands-on industrial control system (ICS) security lab built on
 [GRFICSv3](https://github.com/Fortiphyd/GRFICSv3) by Fortiphyd Logic,
-running in Docker on a Proxmox VM. This project simulates a chemical
+running in Docker on a VMware ESXi host. This project simulates a chemical
 plant, carries out a Modbus attack against the PLC, detects it with a
 Suricata rule mapped to MITRE ATT&CK for ICS, and centralizes the
 alert in a Wazuh SIEM.
@@ -19,10 +19,10 @@ alert in a Wazuh SIEM.
 - Automating triage and incident-case creation without letting the response touch the live process (OT-safe SOAR)
 
 ## Lab environment
-- Host: Proxmox VE, Ubuntu 24.04 VM (4 vCPU, 12 GB RAM)
+- Host: VMware ESXi, Ubuntu 24.04 VM (4 vCPU, 12 GB RAM)
 - GRFICSv3 containers: simulation, PLC (OpenPLC), HMI (Scada-LTS),
   engineering workstation, router, Kali attacker, Caldera
-- Change from upstream: macvlan parent set to the VM's NIC (ens18)
+- Change from upstream: macvlan parent set to the VM's NIC (ens34)
 - Detection: Suricata 7 on the ICS network; alerts shipped by a Wazuh
   agent to a central Wazuh manager
 
@@ -97,8 +97,8 @@ behavioral layer catches reconnaissance the signatures miss. See
 A few real problems I worked through, kept here because they're the useful part:
 
 - **GRFICS networking wouldn't come up on the VM.** The compose file defines
-  macvlan networks with a parent of `eth0`, but on my Ubuntu VM under Proxmox
-  the NIC is `ens18`, so the networks failed to create until I pointed the
+  macvlan networks with a parent of `eth0`, but on my Ubuntu VM under ESXi
+  the NIC is `ens34`, so the networks failed to create until I pointed the
   macvlan parent at the right interface.
 - **Reading the Modbus function code in Suricata.** The function code is the
   8th byte of the Modbus/TCP payload, so the rules match on `content:"|06|";
